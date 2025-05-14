@@ -26,7 +26,7 @@ vector<string> tokenize(const string& input) {
         char c = input[i];
 
         if (c == '"') {
-            inQuotes = !inQuotes;  // toggle quote state
+            inQuotes = !inQuotes;  
         } else if (isspace(c) && !inQuotes) {
             if (!current.empty()) {
                 tokens.push_back(current);
@@ -73,6 +73,53 @@ void executeCommand(const string& commandLine){
         else if(command=="myexit"){
             myexit();
         }
+        else if (command == "myclear") {
+            myclear();
+        } 
+        else if (command == "myls") {
+            myls();
+        }
+        else if (command == "mycat") {
+            if (line.find('<') != std::string::npos)
+                mycat(trim(line.substr(line.find('<') + 1)));
+            else if (args.size() > 1)
+                mycat(args[1]);
+            else
+                std::cerr << "Usage: mycat <filename>\n";
+        }
+        else if (command == "mydate") {
+            mydate();
+        }
+        else if (command == "mymkdir") {
+            if (args.size() > 1) mymkdir(args[1]);
+            else std::cerr << "Usage: mymkdir <dirname>\n";
+        }
+        else if (command == "myrmdir") {
+            if (args.size() > 1) myrmdir(args[1]);
+            else std::cerr << "Usage: myrmdir <dirname>\n";
+        }
+        else if (command == "mycp") {
+            if (args.size() > 2) mycp(args[1], args[2]);
+            else std::cerr << "Usage: mycp <source> <destination>\n";
+        }
+        else if (command == "mymv") {
+            if (args.size() > 2) mymv(args[1], args[2]);
+            else std::cerr << "Usage: mymv <source> <destination>\n";
+        }
+        else if (command == "mytouch") {
+            if (args.size() > 1) mytouch(args[1]);
+            else std::cerr << "Usage: mytouch <filename>\n";
+        }
+        else if (command == "myrm") {
+            if (args.size() > 1) myrm(args[1]);
+            else std::cerr << "Usage: myrm <filename>\n";
+        }
+        else if (command == "mytime") {
+            mytime();
+        }
+        else if (command == "myhelp") {
+            myhelp();
+        } 
     } catch(const exception& e){
         cerr << "Exception: " << e.what() << "\n";
     }
@@ -81,21 +128,24 @@ void executeCommand(const string& commandLine){
 void shellLoop(){
     string input;
     cout<< "Welcome to MyShell! Type 'myexit' to quit.\n";
-            while (true) {
-            char ch = _getch();
+        while(true){
+            input.clear();
+                while (true) {
+                    char ch = _getch();
 
-            if (ch == 13) { 
-                std::cout << std::endl;
-                break;
-            } else if (ch == 8) { 
-                if (!input.empty()) {
-                    input.pop_back();
-                    std::cout << "\b \b";
+                    if (ch == 13) { 
+                        std::cout << std::endl;
+                        break;
+                    } else if (ch == 8) { 
+                        if (!input.empty()) {
+                            input.pop_back();
+                            std::cout << "\b \b";
+                        }
+                    } else {
+                        input += ch;
+                        std::cout << ch;
+                    }
                 }
-            } else {
-                input += ch;
-                std::cout << ch;
-            }
+            executeCommand(input);
         }
-        executeCommand(input);
 }
