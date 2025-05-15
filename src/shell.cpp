@@ -15,7 +15,25 @@
 
 #include "builtins.h"
 #include "utils.h"
+#include "config.h"
+#include "shell.h"
+
 using namespace std;
+
+ShellConfig shellConfig;
+
+string expandEnvironmentVariables(const std::string& input) {
+    return shellConfig.expandVariables(input);
+}
+
+void loadConfig() {
+    
+    shellConfig.loadSystemEnvironment();
+    
+    shellConfig.loadConfigFile();
+    
+    shellConfig.syncWithSystemEnvironment();
+}
 
 vector<string> tokenize(const string& input) {
     vector<string> tokens;
@@ -48,8 +66,10 @@ void executeCommand(const string& commandLine){
     string line = trim(commandLine);
     if (line.empty()) return;
 
+    std::string expandedLine = expandEnvironmentVariables(line);
 
-    vector<string> args = tokenize(line);
+
+    vector<string> args = tokenize(expandedLine);
     if (args.empty()) return;
 
     string command = args[0];
@@ -119,7 +139,43 @@ void executeCommand(const string& commandLine){
         }
         else if (command == "myhelp") {
             myhelp();
-        } 
+        }
+        else if (command == "myexport") {
+            if (args.size() > 1) {
+                size_t eqPos = args[1].find('=');
+                if (eqPos != std::string::npos) {
+                std::string var = args[1].substr(0, eqPos);
+                std::string val = args[1].substr(eqPos + 1);
+                shellConfig.setEnv(var, val);
+                shellConfig.syncWithSystemEnvironment(); 
+                } else {
+                std::cerr << "Usage: myexport VAR=value\n";
+                }
+            } else {
+                std::cerr << "Usage: myexport VAR=value\n";
+            }
+        }
+        else if (command == "unset") {
+            if (args.size() > 1) {
+                if (!shellConfig.unsetEnv(args[1])) {
+                    std::cerr << "Variable not found: " << args[1] << "\n";
+                }
+                shellConfig.syncWithSystemEnvironment();
+            } else {
+                std::cerr << "Usage: unset VAR\n";
+            }
+        }
+        else if (command == "myenv") {
+            shellConfig.printEnv();
+        }
+        else if (command == "setprompt") {
+            if (args.size() > 1) {
+                shellConfig.setEnv("PROMPT", args[1]);
+                shellConfig.syncWithSystemEnvironment();
+            } else {
+                std::cerr << "Usage: setprompt <new_prompt>\n";
+            }
+        }  
     } catch(const exception& e){
         cerr << "Exception: " << e.what() << "\n";
     }
