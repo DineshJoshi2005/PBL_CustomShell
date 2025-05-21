@@ -17,10 +17,12 @@
 #include "utils.h"
 #include "config.h"
 #include "shell.h"
+#include "process_manager.h"
 
 using namespace std;
 
 ShellConfig shellConfig;
+ProcessManager processManager;
 
 string expandEnvironmentVariables(const std::string& input) {
     return shellConfig.expandVariables(input);
@@ -175,6 +177,47 @@ void executeCommand(const string& commandLine){
             } else {
                 std::cerr << "Usage: setprompt <new_prompt>\n";
             }
+        }
+        else if (command == "killtask") {
+            if (args.size() < 2) std::cerr << "Usage: killtask <pid|process_name>\n";
+            else {
+                try {
+                    processManager.killProcessByPID(std::stoi(args[1]));
+                } catch (...) {
+                    processManager.killProcessByName(args[1]);
+                }
+            }
+        } 
+        else if (command == "priority") {
+            if (args.size() < 3) std::cerr << "Usage: priority <pid|name> <level>\n";
+            else {
+                DWORD priority;
+                if (args[2] == "low") priority = IDLE_PRIORITY_CLASS;
+                else if (args[2] == "below") priority = BELOW_NORMAL_PRIORITY_CLASS;
+                else if (args[2] == "normal") priority = NORMAL_PRIORITY_CLASS;
+                else if (args[2] == "above") priority = ABOVE_NORMAL_PRIORITY_CLASS;
+                else if (args[2] == "high") priority = HIGH_PRIORITY_CLASS;
+                else if (args[2] == "realtime") priority = REALTIME_PRIORITY_CLASS;
+                else {
+                    std::cerr << "Invalid priority level.\n";
+                    return;
+                }
+                processManager.changePriority(args[1], priority);
+            }
+        } 
+        else if (command == "mysystemtasks") {
+            processManager.listAllSystemProcesses();
+        } 
+        else if (command == "jobs") {
+            processManager.listBackgroundProcesses();
+        }
+        else if (command == "fg") {
+            if (args.size() > 1) processManager.bringToForeground(std::stoi(args[1]));
+            else std::cerr << "Usage: fg <job_id>\n";
+        } 
+        else if (command == "bg") {
+            if (args.size() > 1) processManager.sendToBackground(std::stoi(args[1]));
+            else std::cerr << "Usage: bg <job_id>\n";
         }  
     } catch(const exception& e){
         cerr << "Exception: " << e.what() << "\n";
