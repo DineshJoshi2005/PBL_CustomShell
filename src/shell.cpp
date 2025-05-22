@@ -24,7 +24,7 @@ using namespace std;
 ShellConfig shellConfig;
 ProcessManager processManager;
 
-string expandEnvironmentVariables(const std::string& input) {
+string expandEnvironmentVariables(const string& input) {
     return shellConfig.expandVariables(input);
 }
 
@@ -68,7 +68,7 @@ void executeCommand(const string& commandLine){
     string line = trim(commandLine);
     if (line.empty()) return;
 
-    std::string expandedLine = expandEnvironmentVariables(line);
+    string expandedLine = expandEnvironmentVariables(line);
 
 
     vector<string> args = tokenize(expandedLine);
@@ -102,39 +102,39 @@ void executeCommand(const string& commandLine){
             myls();
         }
         else if (command == "mycat") {
-            if (line.find('<') != std::string::npos)
+            if (line.find('<') != string::npos)
                 mycat(trim(line.substr(line.find('<') + 1)));
             else if (args.size() > 1)
                 mycat(args[1]);
             else
-                std::cerr << "Usage: mycat <filename>\n";
+                cerr << "Usage: mycat <filename>\n";
         }
         else if (command == "mydate") {
             mydate();
         }
         else if (command == "mymkdir") {
             if (args.size() > 1) mymkdir(args[1]);
-            else std::cerr << "Usage: mymkdir <dirname>\n";
+            else cerr << "Usage: mymkdir <dirname>\n";
         }
         else if (command == "myrmdir") {
             if (args.size() > 1) myrmdir(args[1]);
-            else std::cerr << "Usage: myrmdir <dirname>\n";
+            else cerr << "Usage: myrmdir <dirname>\n";
         }
         else if (command == "mycp") {
             if (args.size() > 2) mycp(args[1], args[2]);
-            else std::cerr << "Usage: mycp <source> <destination>\n";
+            else cerr << "Usage: mycp <source> <destination>\n";
         }
         else if (command == "mymv") {
             if (args.size() > 2) mymv(args[1], args[2]);
-            else std::cerr << "Usage: mymv <source> <destination>\n";
+            else cerr << "Usage: mymv <source> <destination>\n";
         }
         else if (command == "mytouch") {
             if (args.size() > 1) mytouch(args[1]);
-            else std::cerr << "Usage: mytouch <filename>\n";
+            else cerr << "Usage: mytouch <filename>\n";
         }
         else if (command == "myrm") {
             if (args.size() > 1) myrm(args[1]);
-            else std::cerr << "Usage: myrm <filename>\n";
+            else cerr << "Usage: myrm <filename>\n";
         }
         else if (command == "mytime") {
             mytime();
@@ -145,26 +145,26 @@ void executeCommand(const string& commandLine){
         else if (command == "myexport") {
             if (args.size() > 1) {
                 size_t eqPos = args[1].find('=');
-                if (eqPos != std::string::npos) {
-                std::string var = args[1].substr(0, eqPos);
-                std::string val = args[1].substr(eqPos + 1);
+                if (eqPos != string::npos) {
+                string var = args[1].substr(0, eqPos);
+                string val = args[1].substr(eqPos + 1);
                 shellConfig.setEnv(var, val);
                 shellConfig.syncWithSystemEnvironment(); 
                 } else {
-                std::cerr << "Usage: myexport VAR=value\n";
+                cerr << "Usage: myexport VAR=value\n";
                 }
             } else {
-                std::cerr << "Usage: myexport VAR=value\n";
+                cerr << "Usage: myexport VAR=value\n";
             }
         }
         else if (command == "unset") {
             if (args.size() > 1) {
                 if (!shellConfig.unsetEnv(args[1])) {
-                    std::cerr << "Variable not found: " << args[1] << "\n";
+                    cerr << "Variable not found: " << args[1] << "\n";
                 }
                 shellConfig.syncWithSystemEnvironment();
             } else {
-                std::cerr << "Usage: unset VAR\n";
+                cerr << "Usage: unset VAR\n";
             }
         }
         else if (command == "myenv") {
@@ -175,21 +175,21 @@ void executeCommand(const string& commandLine){
                 shellConfig.setEnv("PROMPT", args[1]);
                 shellConfig.syncWithSystemEnvironment();
             } else {
-                std::cerr << "Usage: setprompt <new_prompt>\n";
+                cerr << "Usage: setprompt <new_prompt>\n";
             }
         }
         else if (command == "killtask") {
-            if (args.size() < 2) std::cerr << "Usage: killtask <pid|process_name>\n";
+            if (args.size() < 2) cerr << "Usage: killtask <pid|process_name>\n";
             else {
                 try {
-                    processManager.killProcessByPID(std::stoi(args[1]));
+                    processManager.killProcessByPID(stoi(args[1]));
                 } catch (...) {
                     processManager.killProcessByName(args[1]);
                 }
             }
         } 
         else if (command == "priority") {
-            if (args.size() < 3) std::cerr << "Usage: priority <pid|name> <level>\n";
+            if (args.size() < 3) cerr << "Usage: priority <pid|name> <level>\n";
             else {
                 DWORD priority;
                 if (args[2] == "low") priority = IDLE_PRIORITY_CLASS;
@@ -199,7 +199,7 @@ void executeCommand(const string& commandLine){
                 else if (args[2] == "high") priority = HIGH_PRIORITY_CLASS;
                 else if (args[2] == "realtime") priority = REALTIME_PRIORITY_CLASS;
                 else {
-                    std::cerr << "Invalid priority level.\n";
+                    cerr << "Invalid priority level.\n";
                     return;
                 }
                 processManager.changePriority(args[1], priority);
@@ -212,12 +212,12 @@ void executeCommand(const string& commandLine){
             processManager.listBackgroundProcesses();
         }
         else if (command == "fg") {
-            if (args.size() > 1) processManager.bringToForeground(std::stoi(args[1]));
-            else std::cerr << "Usage: fg <job_id>\n";
+            if (args.size() > 1) processManager.bringToForeground(stoi(args[1]));
+            else cerr << "Usage: fg <job_id>\n";
         } 
         else if (command == "bg") {
-            if (args.size() > 1) processManager.sendToBackground(std::stoi(args[1]));
-            else std::cerr << "Usage: bg <job_id>\n";
+            if (args.size() > 1) processManager.sendToBackground(stoi(args[1]));
+            else cerr << "Usage: bg <job_id>\n";
         }  
     } catch(const exception& e){
         cerr << "Exception: " << e.what() << "\n";
@@ -228,21 +228,31 @@ void shellLoop(){
     string input;
     cout<< "Welcome to MyShell! Type 'myexit' to quit.\n";
         while(true){
+            char cwd[MAX_PATH];
+            string prompt;
+
+            if (GetCurrentDirectoryA(MAX_PATH, cwd)) {
+                string configPrompt = shellConfig.getEnv("PROMPT");
+                prompt = configPrompt.empty() ? string(cwd) + "> " : configPrompt;
+            } else {
+                prompt = shellConfig.getEnv("PROMPT").empty() ? "myshell> " : shellConfig.getEnv("PROMPT");
+            }
+            cout << prompt << flush;
             input.clear();
                 while (true) {
                     char ch = _getch();
 
                     if (ch == 13) { 
-                        std::cout << std::endl;
+                        cout << endl;
                         break;
                     } else if (ch == 8) { 
                         if (!input.empty()) {
                             input.pop_back();
-                            std::cout << "\b \b";
+                            cout << "\b \b";
                         }
                     } else {
                         input += ch;
-                        std::cout << ch;
+                        cout << ch;
                     }
                 }
             executeCommand(input);
