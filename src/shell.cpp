@@ -268,104 +268,109 @@ void executeCommand(const string& commandLine){
         cerr << "Exception: " << e.what() << "\n";
     }
 }
-
-void shellLoop(){
+void shellLoop() {
     string input;
-    cout<< "Welcome to MyShell! Type 'myexit' to quit.\n";
-        while(true){
-            char cwd[MAX_PATH];
-            string prompt;
-            loadConfig();
+    cout << "Welcome to MyShell! Type 'myexit' to quit.\n";
 
-            HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-            HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    loadConfig();
 
-            if (GetCurrentDirectoryA(MAX_PATH, cwd)) {
-                string configPrompt = shellConfig.getEnv("PROMPT");
-                prompt = configPrompt.empty() ? string(cwd) + "> " : configPrompt;
-            } else {
-                prompt = shellConfig.getEnv("PROMPT").empty() ? "myshell> " : shellConfig.getEnv("PROMPT");
-            }
-            cout << prompt << flush;
-            input.clear();
-            size_t cursorPos = 0;
-            
-                while (true) {
-                    char ch = _getch();
-                    if (ch == 9) { 
-                        size_t lastSpace = input.find_last_of(" ");
-                        string prefix = (lastSpace == string::npos) ? input : input.substr(lastSpace + 1);
-        
-                        vector<string> completions = getCompletions(prefix);
-                        if (!completions.empty()) {
-                            string completion = completions[0];
-                            input = (lastSpace == string::npos ? "" : input.substr(0, lastSpace + 1)) + completion;
-                            cursorPos = input.length();
-        
-                            cout << "\r" << prompt << input << " ";
-                            cout << "\r" << prompt;
-                            for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
-                        }
-                    }
-                    else if (ch == 13) { 
-                        cout << endl;
-                        break;
-                    } else if (ch == 8) { 
-                        if (cursorPos > 0) {
-                            input.erase(cursorPos - 1, 1);
-                            cursorPos--;
-        
-                            cout << "\r" << prompt << input << " ";
-                            cout << "\r" << prompt;
-                            for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
-                        }
-                    }
-                    else if (ch == -32 || ch == 224) {
-                        char arrow = _getch();
-                        if (arrow == 72) {
-                            string prevCmd = history.getPreviousCommand();
-                            if (!prevCmd.empty()) {
-                                input = prevCmd;
-                                cursorPos = input.length();
-                                cout << "\r" << prompt << input << " ";
-                                cout << "\r" << prompt;
-                                for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
-                            }
-                        } else if (arrow == 80) { 
-                            string nextCmd = history.getNextCommand();
-                            input = nextCmd;
-                            cursorPos = input.length();
-                            cout << "\r" << prompt << input << " ";
-                            cout << "\r" << prompt;
-                            for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
-                        } else if (arrow == 75) { 
-                            if (cursorPos > 0) {
-                                cout << "\b";
-                                cursorPos--;
-                            }
-                        } else if (arrow == 77) { 
-                            if (cursorPos < input.length()) {
-                                cout << input[cursorPos];
-                                cursorPos++;
-                            }
-                        }
-                    }
-                    else {
-                        input.insert(cursorPos, 1, ch);
+    HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    while (true) {
+        char cwd[MAX_PATH];
+        string prompt;
+
+        if (GetCurrentDirectoryA(MAX_PATH, cwd)) {
+            string configPrompt = shellConfig.getEnv("PROMPT");
+            prompt = configPrompt.empty() ? string(cwd) + "> " : configPrompt;
+        } else {
+            prompt = shellConfig.getEnv("PROMPT").empty() ? "myshell> " : shellConfig.getEnv("PROMPT");
+        }
+
+        cout << prompt << flush;
+
+        input.clear();
+        size_t cursorPos = 0;
+
+        while (true) {
+            char ch = _getch();
+
+            if (ch == 9) { 
+                size_t lastSpace = input.find_last_of(" ");
+                string prefix = (lastSpace == string::npos) ? input : input.substr(lastSpace + 1);
+
+                vector<string> completions = getCompletions(prefix);
+                if (!completions.empty()) {
+                    string completion = completions[0];
+                    input = (lastSpace == string::npos ? "" : input.substr(0, lastSpace + 1)) + completion;
+                    cursorPos = input.length();
+
+                    
+                    cout << "\r" << prompt << input << " ";
+                    cout << "\r" << prompt;
+                    for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
+                }
+            } else if (ch == 13) { 
+                cout << endl;
+                break;
+            } else if (ch == 8) { 
+                if (cursorPos > 0) {
+                    input.erase(cursorPos - 1, 1);
+                    cursorPos--;
+
+                    cout << "\r" << prompt << input << " ";
+                    cout << "\r" << prompt;
+                    for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
+                }
+            } else if (ch == -32 || ch == 224) { 
+                char arrow = _getch();
+                if (arrow == 72) { 
+                    string prevCmd = history.getPreviousCommand();
+                    if (!prevCmd.empty()) {
+                        input = prevCmd;
+                        cursorPos = input.length();
                         cout << "\r" << prompt << input << " ";
-                        cursorPos++;
-        
                         cout << "\r" << prompt;
-                        for (size_t i = 0; i < cursorPos; ++i) {
-                            cout << input[i];
-                        }
+                        for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
                     }
-                    if (!input.empty()) {
-                        history.addCommand(input);
+                } else if (arrow == 80) { 
+                    string nextCmd = history.getNextCommand();
+                    input = nextCmd;
+                    cursorPos = input.length();
+                    cout << "\r" << prompt << input << " ";
+                    cout << "\r" << prompt;
+                    for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
+                } else if (arrow == 75) { 
+                    if (cursorPos > 0) {
+                        cout << "\b";
+                        cursorPos--;
+                    }
+                } else if (arrow == 77) {
+                    if (cursorPos < input.length()) {
+                        cout << input[cursorPos];
+                        cursorPos++;
                     }
                 }
+            } else {
                 
-            executeCommand(input);
+                input.insert(cursorPos, 1, ch);
+                cout << "\r" << prompt << input << " ";
+                cursorPos++;
+
+                cout << "\r" << prompt;
+                for (size_t i = 0; i < cursorPos; ++i) {
+                    cout << input[i];
+                }
+            }
         }
-        history.saveHistoryToFile();
+
+        if (!input.empty()) {
+            history.addCommand(input);
+        }
+
+        executeCommand(input);
+    }
+
+    history.saveHistoryToFile(); 
 }
