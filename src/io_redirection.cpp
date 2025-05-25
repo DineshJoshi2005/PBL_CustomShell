@@ -10,13 +10,15 @@
 #include "utils.h"
 #include "shell.h"
 #include "io_redirection.h"
+
 using namespace std;
 
 void executeWithRedirection(const string& commandLine) {
     string commandPart = commandLine;
     string inputFile, outputFile;
+    bool appendMode = false; 
 
-    parseRedirection(commandPart, inputFile, outputFile);
+    parseRedirection(commandPart, inputFile, outputFile, appendMode);
 
     int originalStdin = _dup(_fileno(stdin));
     int originalStdout = _dup(_fileno(stdout));
@@ -33,7 +35,8 @@ void executeWithRedirection(const string& commandLine) {
     }
 
     if (!outputFile.empty()) {
-        outFile = freopen(outputFile.c_str(), "w", stdout);
+        const char* mode = appendMode ? "a" : "w";
+        outFile = freopen(outputFile.c_str(), mode, stdout);
         if (!outFile) {
             cerr << "Error: Cannot open output file '" << outputFile << "'\n";
             if (inFile) fclose(inFile);
@@ -46,18 +49,19 @@ void executeWithRedirection(const string& commandLine) {
     fflush(stdout);
     fflush(stdin);
 
-    
     if (!inputFile.empty()) {
-        freopen("CON", "r", stdin);  
+        freopen("CON", "r", stdin);
         _dup2(originalStdin, _fileno(stdin));
     }
 
-    // Restore stdout
     if (!outputFile.empty()) {
-        freopen("CON", "w", stdout); 
+        freopen("CON", "w", stdout);
         _dup2(originalStdout, _fileno(stdout));
     }
 
     _close(originalStdin);
     _close(originalStdout);
 }
+
+
+
