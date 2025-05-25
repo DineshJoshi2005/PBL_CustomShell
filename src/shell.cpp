@@ -69,11 +69,14 @@ void executeCommand(const string& commandLine){
     if (line.empty()) return;
 
     string expandedLine = expandEnvironmentVariables(line);
-
+    if (expandedLine.find('<') != std::string::npos || expandedLine.find('>') != std::string::npos) {
+        executeWithRedirection(expandedLine);
+        return;
+    }
 
     vector<string> args = tokenize(expandedLine);
     if (args.empty()) return;
-
+    
     string command = args[0];
     
     try{
@@ -87,7 +90,7 @@ void executeCommand(const string& commandLine){
         else if(command=="myecho"){
             if (args.size() > 1) {
                 string text = trim(line.substr(line.find(" ") + 1));
-                cout << text << "\n";
+                cout << shellConfig.expandVariables(text) << "\n";
                 } else{
                     cerr << "Usage: myecho <text>\n";
                 }
@@ -102,12 +105,10 @@ void executeCommand(const string& commandLine){
             myls();
         }
         else if (command == "mycat") {
-            if (line.find('<') != string::npos)
-                mycat(trim(line.substr(line.find('<') + 1)));
-            else if (args.size() > 1)
-                mycat(args[1]);
+            if (args.size() > 1)
+                mycat(args[1]); 
             else
-                cerr << "Usage: mycat <filename>\n";
+                mycat();        
         }
         else if (command == "mydate") {
             mydate();
