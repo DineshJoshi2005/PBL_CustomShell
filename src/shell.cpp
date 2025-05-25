@@ -268,14 +268,32 @@ void executeCommand(const string& commandLine){
         cerr << "Exception: " << e.what() << "\n";
     }
 }
+
+void clearAndRedrawLine(const string& prompt, const string& input, size_t cursorPos) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    DWORD written;
+
+    GetConsoleScreenBufferInfo(hConsole, &csbi);
+
+    COORD lineStart = { 0, csbi.dwCursorPosition.Y };
+
+    FillConsoleOutputCharacter(hConsole, ' ', csbi.dwSize.X, lineStart, &written);
+    FillConsoleOutputAttribute(hConsole, csbi.wAttributes, csbi.dwSize.X, lineStart, &written);
+
+    SetConsoleCursorPosition(hConsole, lineStart);
+
+    cout << prompt << input << flush;
+
+    SetConsoleCursorPosition(hConsole, { (SHORT)(prompt.length() + cursorPos), csbi.dwCursorPosition.Y });
+}
+
+
 void shellLoop() {
     string input;
     cout << "Welcome to MyShell! Type 'myexit' to quit.\n";
 
     loadConfig();
-
-    HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
-    HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
     while (true) {
         char cwd[MAX_PATH];
@@ -305,11 +323,7 @@ void shellLoop() {
                     string completion = completions[0];
                     input = (lastSpace == string::npos ? "" : input.substr(0, lastSpace + 1)) + completion;
                     cursorPos = input.length();
-
-                    
-                    cout << "\r" << prompt << input << " ";
-                    cout << "\r" << prompt;
-                    for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
+                    clearAndRedrawLine(prompt, input, cursorPos);
                 }
             } else if (ch == 13) { 
                 cout << endl;
@@ -318,10 +332,7 @@ void shellLoop() {
                 if (cursorPos > 0) {
                     input.erase(cursorPos - 1, 1);
                     cursorPos--;
-
-                    cout << "\r" << prompt << input << " ";
-                    cout << "\r" << prompt;
-                    for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
+                    clearAndRedrawLine(prompt, input, cursorPos);
                 }
             } else if (ch == -32 || ch == 224) { 
                 char arrow = _getch();
@@ -330,38 +341,28 @@ void shellLoop() {
                     if (!prevCmd.empty()) {
                         input = prevCmd;
                         cursorPos = input.length();
-                        cout << "\r" << prompt << input << " ";
-                        cout << "\r" << prompt;
-                        for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
+                        clearAndRedrawLine(prompt, input, cursorPos);
                     }
                 } else if (arrow == 80) { 
                     string nextCmd = history.getNextCommand();
                     input = nextCmd;
                     cursorPos = input.length();
-                    cout << "\r" << prompt << input << " ";
-                    cout << "\r" << prompt;
-                    for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
+                    clearAndRedrawLine(prompt, input, cursorPos);
                 } else if (arrow == 75) { 
                     if (cursorPos > 0) {
-                        cout << "\b";
                         cursorPos--;
+                        clearAndRedrawLine(prompt, input, cursorPos);
                     }
-                } else if (arrow == 77) {
+                } else if (arrow == 77) { 
                     if (cursorPos < input.length()) {
-                        cout << input[cursorPos];
                         cursorPos++;
+                        clearAndRedrawLine(prompt, input, cursorPos);
                     }
                 }
             } else {
-                
                 input.insert(cursorPos, 1, ch);
-                cout << "\r" << prompt << input << " ";
                 cursorPos++;
-
-                cout << "\r" << prompt;
-                for (size_t i = 0; i < cursorPos; ++i) {
-                    cout << input[i];
-                }
+                clearAndRedrawLine(prompt, input, cursorPos);
             }
         }
 
@@ -372,5 +373,5 @@ void shellLoop() {
         executeCommand(input);
     }
 
-    history.saveHistoryToFile(); 
+    history.saveHistoryToFile();
 }

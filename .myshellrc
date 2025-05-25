@@ -1,0 +1,8 @@
+# Custom Shell Configuration File
+
+
+
+USER=dinesh
+PATH=C:/vs code/CustomShell/bin:$PATH
+EDITOR="Visual Studio Code"
+PROJECT_HOME="vscode/PBL/PBL_CustomShell"
