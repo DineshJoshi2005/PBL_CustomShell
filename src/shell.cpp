@@ -21,7 +21,10 @@
 
 using namespace std;
 
+static HistoryManager history;
+
 ShellConfig shellConfig;
+
 ProcessManager processManager;
 
 string expandEnvironmentVariables(const string& input) {
@@ -63,13 +66,34 @@ vector<string> tokenize(const string& input) {
     
     return tokens;
 }
+void parseRedirection(string& command, string& inputFile, string& outputFile, bool& appendMode) {
+    istringstream iss(command);
+    string token;
+    string cleanedCommand;
+
+    while (iss >> token) {
+        if (token == "<") {
+            iss >> inputFile;
+        } else if (token == ">>") {
+            iss >> outputFile;
+            appendMode = true; 
+        } else if (token == ">") {
+            iss >> outputFile;
+            appendMode = false; 
+        } else {
+            cleanedCommand += token + " ";
+        }
+    }
+
+    command = trim(cleanedCommand);
+}
 
 void executeCommand(const string& commandLine){
     string line = trim(commandLine);
     if (line.empty()) return;
 
     string expandedLine = expandEnvironmentVariables(line);
-    if (expandedLine.find('<') != std::string::npos || expandedLine.find('>') != std::string::npos) {
+    if (expandedLine.find('<') != string::npos || expandedLine.find('>') != string::npos) {
         executeWithRedirection(expandedLine);
         return;
     }
@@ -269,7 +293,7 @@ void shellLoop(){
         
                             cout << "\r" << prompt << input << " ";
                             cout << "\r" << prompt;
-                            for (size_t i = 0; i < cursorPos; ++i) std::cout << input[i];
+                            for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
                         }
                     }
                     else if (ch == -32 || ch == 224) {
