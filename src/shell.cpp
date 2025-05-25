@@ -241,8 +241,22 @@ void shellLoop(){
             input.clear();
                 while (true) {
                     char ch = _getch();
-
-                    if (ch == 13) { 
+                    if (ch == 9) { 
+                        size_t lastSpace = input.find_last_of(" ");
+                        string prefix = (lastSpace == string::npos) ? input : input.substr(lastSpace + 1);
+        
+                        vector<string> completions = getCompletions(prefix);
+                        if (!completions.empty()) {
+                            string completion = completions[0];
+                            input = (lastSpace == string::npos ? "" : input.substr(0, lastSpace + 1)) + completion;
+                            cursorPos = input.length();
+        
+                            cout << "\r" << prompt << input << " ";
+                            cout << "\r" << prompt;
+                            for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
+                        }
+                    }
+                    else if (ch == 13) { 
                         cout << endl;
                         break;
                     } else if (ch == 8) { 
