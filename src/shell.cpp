@@ -244,16 +244,16 @@ void executeCommand(const string& commandLine){
             if (args.size() > 1) processManager.sendToBackground(stoi(args[1]));
             else cerr << "Usage: bg <job_id>\n";
         } else {
-            std::string fullCmd = "cmd.exe /C \"" + line + "\"";
+            string fullCmd = "cmd.exe /C \"" + line + "\"";
             char cmd[4096];
-            std::strcpy(cmd, fullCmd.c_str());
+            strcpy(cmd, fullCmd.c_str());
 
             STARTUPINFOA si = {};
             PROCESS_INFORMATION pi = {};
             si.cb = sizeof(si);
 
             if (!CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-                std::cerr << "Failed to execute external command.\n";
+                cerr << "Failed to execute external command.\n";
                 return;
             }
 
