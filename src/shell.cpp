@@ -240,6 +240,8 @@ void shellLoop(){
             }
             cout << prompt << flush;
             input.clear();
+            size_t cursorPos = 0;
+            
                 while (true) {
                     char ch = _getch();
                     if (ch == 9) { 
@@ -261,15 +263,57 @@ void shellLoop(){
                         cout << endl;
                         break;
                     } else if (ch == 8) { 
-                        if (!input.empty()) {
-                            input.pop_back();
-                            cout << "\b \b";
+                        if (cursorPos > 0) {
+                            input.erase(cursorPos - 1, 1);
+                            cursorPos--;
+        
+                            cout << "\r" << prompt << input << " ";
+                            cout << "\r" << prompt;
+                            for (size_t i = 0; i < cursorPos; ++i) std::cout << input[i];
                         }
-                    } else {
-                        input += ch;
-                        cout << ch;
+                    }
+                    else if (ch == -32 || ch == 224) {
+                        char arrow = _getch();
+                        if (arrow == 72) {
+                            string prevCmd = history.getPreviousCommand();
+                            if (!prevCmd.empty()) {
+                                input = prevCmd;
+                                cursorPos = input.length();
+                                cout << "\r" << prompt << input << " ";
+                                cout << "\r" << prompt;
+                                for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
+                            }
+                        } else if (arrow == 80) { 
+                            string nextCmd = history.getNextCommand();
+                            input = nextCmd;
+                            cursorPos = input.length();
+                            cout << "\r" << prompt << input << " ";
+                            cout << "\r" << prompt;
+                            for (size_t i = 0; i < cursorPos; ++i) cout << input[i];
+                        } else if (arrow == 75) { 
+                            if (cursorPos > 0) {
+                                cout << "\b";
+                                cursorPos--;
+                            }
+                        } else if (arrow == 77) { 
+                            if (cursorPos < input.length()) {
+                                cout << input[cursorPos];
+                                cursorPos++;
+                            }
+                        }
+                    }
+                    else {
+                        input.insert(cursorPos, 1, ch);
+                        cout << "\r" << prompt << input << " ";
+                        cursorPos++;
+        
+                        cout << "\r" << prompt;
+                        for (size_t i = 0; i < cursorPos; ++i) {
+                            cout << input[i];
+                        }
                     }
                 }
+                
             executeCommand(input);
         }
 }
