@@ -18,6 +18,9 @@
 #include "config.h"
 #include "shell.h"
 #include "process_manager.h"
+#include "history.h"
+#include "io_redirection.h"
+#include "autocomplete.h"
 
 using namespace std;
 

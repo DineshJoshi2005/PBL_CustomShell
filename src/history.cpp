@@ -10,7 +10,7 @@ HistoryManager::HistoryManager(const std::string& file)
 void HistoryManager::addCommand(const std::string& command) {
     if (!command.empty()) {
         history.push_back(command);
-        currentIndex = history.size();  // Reset index after new command
+        currentIndex = history.size(); 
     }
 }
 
