@@ -243,7 +243,24 @@ void executeCommand(const string& commandLine){
         else if (command == "bg") {
             if (args.size() > 1) processManager.sendToBackground(stoi(args[1]));
             else cerr << "Usage: bg <job_id>\n";
-        }  
+        } else {
+            std::string fullCmd = "cmd.exe /C \"" + line + "\"";
+            char cmd[4096];
+            std::strcpy(cmd, fullCmd.c_str());
+
+            STARTUPINFOA si = {};
+            PROCESS_INFORMATION pi = {};
+            si.cb = sizeof(si);
+
+            if (!CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+                std::cerr << "Failed to execute external command.\n";
+                return;
+            }
+
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            CloseHandle(pi.hProcess);
+            CloseHandle(pi.hThread);
+        } 
     } catch(const exception& e){
         cerr << "Exception: " << e.what() << "\n";
     }
@@ -255,6 +272,10 @@ void shellLoop(){
         while(true){
             char cwd[MAX_PATH];
             string prompt;
+            loadConfig();
+
+            HANDLE hStdIn = GetStdHandle(STD_INPUT_HANDLE);
+            HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
             if (GetCurrentDirectoryA(MAX_PATH, cwd)) {
                 string configPrompt = shellConfig.getEnv("PROMPT");
@@ -336,8 +357,12 @@ void shellLoop(){
                             cout << input[i];
                         }
                     }
+                    if (!input.empty()) {
+                        history.addCommand(input);
+                    }
                 }
                 
             executeCommand(input);
         }
+        history.saveHistoryToFile();
 }

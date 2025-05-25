@@ -10,7 +10,7 @@ void myecho(const std::string& text);
 void myexit();
 void myclear();
 void myls();
-void mycat(const std::string& filename);
+void mycat(const std::string& filename = "");
 void mydate();
 void mymkdir(const std::string& dirname);
 void mytime();

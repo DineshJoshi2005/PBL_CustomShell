@@ -48,22 +48,22 @@ void myls() {
     }
 }
 
-void mycat(const string &filename = "") {
-    if (filename.empty()) {
-        string line;
-        while (getline(cin, line)) {
-            cout << line << '\n';
-        }
-    } else {
-        ifstream file(filename);
-        if (!file) {
-            cerr << "Error: File not found: " << filename << '\n';
+void mycat(const string& filename) {
+    istream* in = &cin;
+    ifstream file;
+
+    if (!filename.empty()) {
+        file.open(filename);
+        if (!file.is_open()) {
+            cerr << "Error: Cannot open file '" << filename << "'\n";
             return;
         }
-        string line;
-        while (getline(file, line)) {
-            cout << line << '\n';
-        }
+        in = &file;
+    }
+
+    string line;
+    while (getline(*in, line)) {
+        cout << line << "\n";
     }
 }
 
