@@ -90,10 +90,16 @@ void parseRedirection(string& command, string& inputFile, string& outputFile, bo
 
     command = trim(cleanedCommand);
 }
-
 void executeCommand(const string& commandLine){
     string line = trim(commandLine);
     if (line.empty()) return;
+
+    // Check for background execution
+    bool runInBackground = false;
+    if (!line.empty() && line.back() == '&') {
+        runInBackground = true;
+        line = trim(line.substr(0, line.size() - 1)); // remove '&'
+    }
 
     string expandedLine = expandEnvironmentVariables(line);
     if (expandedLine.find('<') != string::npos || expandedLine.find('>') != string::npos) {
@@ -255,12 +261,18 @@ void executeCommand(const string& commandLine){
             PROCESS_INFORMATION pi = {};
             si.cb = sizeof(si);
 
-            if (!CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+            if (!CreateProcessA(NULL, cmd, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi)) {
                 cerr << "Failed to execute external command.\n";
                 return;
             }
 
-            WaitForSingleObject(pi.hProcess, INFINITE);
+            if (runInBackground) {
+                processManager.addBackgroundProcess(pi);
+                cout << "[Running in background] PID: " << pi.dwProcessId << "\n";
+            } else {
+                WaitForSingleObject(pi.hProcess, INFINITE);
+            }
+
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         } 
